@@ -1,75 +1,87 @@
 #!/bin/bash
 
-set -euo pipefail
+set -e
 
 echo "==============================="
 echo "     AZTEC NODE INSTALLER"
 echo "==============================="
 
-# --- Ввод переменных пользователем ---
-read -rp "Введите приватный ключ валидатора: " PRIVATE_KEY
-read -rp "Введите адрес coinbase кошелька (например 0x...): " COINBASE_ADDRESS
+echo "Выберите действие:"
+echo "1. Установить зависимости и AZTEC CLI"
+echo "2. Настроить ноду и запустить"
+read -p "Введите 1 или 2: " CHOICE
 
-# --- Проверка и установка Docker ---
-if ! command -v docker &> /dev/null; then
-  echo "[🔧] Устанавливаем Docker..."
-  curl -fsSL https://get.docker.com -o get-docker.sh
-  sh get-docker.sh
-  systemctl enable docker
-  systemctl start docker
-else
-  echo "[✓] Docker уже установлен"
+if [[ "$CHOICE" == "1" ]]; then
+
+  # --- Установка Docker ---
+  if ! command -v docker &> /dev/null; then
+    echo "[🔧] Устанавливаем Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    systemctl enable docker
+    systemctl start docker
+  else
+    echo "[✓] Docker уже установлен"
+  fi
+
+  # --- Установка UFW ---
+  if ! command -v ufw &> /dev/null; then
+    echo "[🔧] Устанавливаем ufw..."
+    apt update
+    apt install ufw -y
+  else
+    echo "[✓] UFW уже установлен"
+  fi
+
+  # --- Добавление пути Aztec в bashrc ---
+  PROFILE_FILE=~/.bashrc
+  if ! grep -q "/root/.aztec/bin" "$PROFILE_FILE"; then
+    echo 'export PATH=$PATH:/root/.aztec/bin' >> "$PROFILE_FILE"
+    echo "[✓] Добавлен путь /root/.aztec/bin в $PROFILE_FILE"
+  fi
+
+  # --- Установка AZTEC CLI ---
+  echo "[⬇️] Устанавливаем AZTEC CLI..."
+  (yes y | bash <(curl -s https://install.aztec.network))
+
+  echo "[✅] Установка завершена. Перезапустите терминал или выполните:"
+  echo "source ~/.bashrc"
+  echo "Теперь выполните скрипт снова и выберите пункт 2."
+
+  exit 0
 fi
 
-# --- Проверка и установка UFW ---
-if ! command -v ufw &> /dev/null; then
-  echo "[🔧] Устанавливаем UFW..."
-  apt update
-  apt install ufw -y
-fi
+if [[ "$CHOICE" == "2" ]]; then
+  # --- Ввод переменных пользователем ---
+  read -p "Введите приватный ключ валидатора: " PRIVATE_KEY
+  read -p "Введите адрес coinbase кошелька (например 0x...): " COINBASE_ADDRESS
 
-echo "[✓] UFW уже установлен"
+  # --- Проверка доступности aztec-up ---
+  if ! command -v aztec-up &> /dev/null; then
+    echo "[❌] Команда 'aztec-up' не найдена. Сначала выполните пункт 1."
+    exit 1
+  fi
 
-# --- Добавим путь AZTEC в ~/.bashrc, если нужно ---
-PROFILE_FILE="$HOME/.bashrc"
-AZTEC_PATH_LINE='export PATH=$PATH:/root/.aztec/bin'
+  echo "[⬆️] Запускаем aztec-up alpha-testnet..."
+  aztec-up alpha-testnet
 
-if ! grep -Fxq "$AZTEC_PATH_LINE" "$PROFILE_FILE"; then
-  echo "$AZTEC_PATH_LINE" >> "$PROFILE_FILE"
-  echo "[✓] Добавлен путь в $PROFILE_FILE"
-fi
+  # --- Загрузка переменных окружения ---
+  source ~/.bashrc
 
-# --- Загрузка переменных пути (без source может не примениться) ---
-export PATH=$PATH:/root/.aztec/bin
+  # --- Настройка firewall ---
+  echo "[🌐] Настраиваем UFW..."
+  ufw allow ssh
+  ufw allow 40400/tcp
+  ufw allow 40400/udp
+  ufw allow 8080
+  ufw --force enable
+  ufw status
 
-# --- Установка AZTEC CLI ---
-echo "[⬇️] Устанавливаем AZTEC CLI..."
-yes y | bash -i <(curl -s https://install.aztec.network)
+  # --- Получение IP для p2p ---
+  MY_IP=$(curl -4 ifconfig.me)
 
-# Ждём немного после установки
-sleep 10
-
-echo "[⬆️] Запускаем aztec-up alpha-testnet..."
-/root/.aztec/bin/aztec-up alpha-testnet
-
-# --- Настройка UFW ---
-echo "[🌐] Настраиваем UFW..."
-ufw allow ssh
-ufw allow 40400/tcp
-ufw allow 40400/udp
-ufw allow 8080
-ufw --force enable
-ufw status
-
-# --- Получение публичного IP ---
-MY_IP=$(curl -s ifconfig.me)
-if [[ -z "$MY_IP" ]]; then
-  echo "[⚠️] Не удалось получить публичный IP"
-  exit 1
-fi
-
-# --- Создание systemd-сервиса ---
-cat > /etc/systemd/system/aztec.service <<EOF
+  # --- Создание systemd unit ---
+  cat > /etc/systemd/system/aztec.service <<EOF
 [Unit]
 Description=Aztec Alpha Testnet Node
 After=network.target docker.service
@@ -100,15 +112,17 @@ ExecStart=/root/.aztec/bin/aztec start \\
 WantedBy=multi-user.target
 EOF
 
-# --- Перезапуск systemd и запуск сервиса ---
-echo "[🚀] Запускаем aztec.service..."
-systemctl daemon-reexec
-systemctl daemon-reload
-systemctl enable aztec
-systemctl restart aztec
+  echo "[🚀] Запускаем aztec.service..."
+  mkdir -p /root/aztec-node
+  systemctl daemon-reexec
+  systemctl daemon-reload
+  systemctl enable aztec
+  systemctl restart aztec
 
-# --- Вывод логов ---
-echo "==============================="
-echo "    ЛОГИ AZTEC НОДЫ (INFO)"
-echo "==============================="
-journalctl -fu aztec | grep INFO
+  echo "==============================="
+  echo "    ЛОГИ AZTEC НОДЫ (INFO)"
+  echo "==============================="
+  journalctl -fu aztec | grep INFO
+else
+  echo "Неверный выбор. Введите 1 или 2."
+fi
