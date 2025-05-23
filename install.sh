@@ -28,6 +28,7 @@ if [[ "$CHOICE" == "1" ]]; then
   if ! command -v ufw &> /dev/null; then
     echo "[🔧] Устанавливаем ufw..."
     apt update
+    apt install -y jq
     apt install ufw -y
   else
     echo "[✓] UFW уже установлен"
