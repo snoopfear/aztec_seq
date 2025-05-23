@@ -122,7 +122,7 @@ EOF
 
   echo "==============================="
   echo "    ЛОГИ AZTEC НОДЫ (INFO)"
-  echo "==============================="
+  echo "journalctl -fu aztec | grep INFO"
   journalctl -fu aztec | grep INFO
 else
   echo "Неверный выбор. Введите 1 или 2."
