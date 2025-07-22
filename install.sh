@@ -102,12 +102,9 @@ ExecStart=/root/.aztec/bin/aztec start \\
   --network alpha-testnet \\
   --l1-rpc-urls http://65.109.123.206:58545 \\
   --l1-consensus-host-urls http://65.109.123.206:5051 \\
-  --sequencer.validatorPrivateKey=$PRIVATE_KEY \\
+  --sequencer.validatorPrivateKeys $PRIVATE_KEY \\
   --sequencer.coinbase $COINBASE_ADDRESS \\
-  --sequencer.governanceProposerPayload 0x54F7fe24E349993b363A5Fa1bccdAe2589D5E5Ef \\
   --p2p.p2pIp $MY_IP \\
-  --port 8080 \\
-  --admin-port 8880
 
 [Install]
 WantedBy=multi-user.target
