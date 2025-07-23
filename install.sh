@@ -115,6 +115,7 @@ EOF
   systemctl daemon-reexec
   systemctl daemon-reload
   systemctl enable aztec
+  aztec-up latest
   systemctl restart aztec
 
   echo "==============================="
