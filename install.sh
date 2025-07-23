@@ -68,7 +68,7 @@ if [[ "$CHOICE" == "2" ]]; then
 
   # --- Загрузка переменных окружения ---
   source ~/.bashrc
-
+  aztec-up latest
   # --- Настройка firewall ---
   echo "[🌐] Настраиваем UFW..."
   ufw allow ssh
@@ -115,7 +115,6 @@ EOF
   systemctl daemon-reexec
   systemctl daemon-reload
   systemctl enable aztec
-  aztec-up latest
   systemctl restart aztec
 
   echo "==============================="
