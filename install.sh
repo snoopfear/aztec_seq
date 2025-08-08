@@ -63,8 +63,8 @@ if [[ "$CHOICE" == "2" ]]; then
     exit 1
   fi
 
-  echo "[⬆️] Запускаем aztec-up alpha-testnet..."
-  aztec-up alpha-testnet
+  #echo "[⬆️] Запускаем aztec-up alpha-testnet..."
+  #aztec-up alpha-testnet
 
   # --- Загрузка переменных окружения ---
   source ~/.bashrc
