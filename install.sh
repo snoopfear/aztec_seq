@@ -119,7 +119,7 @@ EOF
   systemctl daemon-reexec
   systemctl daemon-reload
   systemctl enable aztec
-  systemctl restart aztec
+  echo "[🚀] Запускаем aztec.service..." systemctl start aztec
 
   echo "==============================="
   echo "    ЛОГИ AZTEC НОДЫ (INFO)"
