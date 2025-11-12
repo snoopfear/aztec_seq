@@ -104,8 +104,8 @@ ExecStart=/root/.aztec/bin/aztec start \\
   --archiver \\
   --sequencer \\
   --network testnet \\
-  --l1-rpc-urls http://95.217.86.121:8545 \\
-  --l1-consensus-host-urls http://95.217.86.121:5052 \\
+  --l1-rpc-urls http://65.109.123.206:58545 \\
+  --l1-consensus-host-urls http://65.109.123.206:5052 \\
   --sequencer.validatorPrivateKeys $PRIVATE_KEY \\
   --sequencer.coinbase $COINBASE_ADDRESS \\
   --p2p.p2pIp $MY_IP \\
