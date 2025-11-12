@@ -42,7 +42,7 @@ if [[ "$CHOICE" == "1" ]]; then
   fi
 
   curl -L https://foundry.paradigm.xyz/ | bash
-  source /root/.bashrc
+  source ~/.bashrc
   foundryup
 
   # --- Установка AZTEC CLI ---
