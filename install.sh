@@ -41,6 +41,10 @@ if [[ "$CHOICE" == "1" ]]; then
     echo "[✓] Добавлен путь /root/.aztec/bin в $PROFILE_FILE"
   fi
 
+  curl -L https://foundry.paradigm.xyz/ | bash
+  source /root/.bashrc
+  foundryup
+
   # --- Установка AZTEC CLI ---
   echo "[⬇️] Устанавливаем AZTEC CLI..."
   (yes y | bash <(curl -s https://install.aztec.network))
@@ -99,9 +103,9 @@ ExecStart=/root/.aztec/bin/aztec start \\
   --node \\
   --archiver \\
   --sequencer \\
-  --network alpha-testnet \\
-  --l1-rpc-urls http://65.109.123.206:58545 \\
-  --l1-consensus-host-urls http://65.109.123.206:5052 \\
+  --network testnet \\
+  --l1-rpc-urls http://95.217.86.121:8545 \\
+  --l1-consensus-host-urls http://95.217.86.121:5052 \\
   --sequencer.validatorPrivateKeys $PRIVATE_KEY \\
   --sequencer.coinbase $COINBASE_ADDRESS \\
   --p2p.p2pIp $MY_IP \\
